@@ -3,3 +3,4 @@ tools/.last_hash
 __pycache__/
 .venv/
 .env
+server/*.log

@@ -33,7 +33,7 @@ flowchart LR
 
 ## Run it locally (no Google account needed)
 
-`tools/simulate_sync.py` does exactly what the Apps Script does (hash, gzip, chunks, same headers), using 210K synthetic rows.
+`tools/simulate_sync.py` does exactly what the Apps Script does (hash, gzip, chunks, same headers), using 210K synthetic rows (real model names such as Toyota RAV4 or Hyundai Tucson, generated numbers).
 
 ```bash
 pip install -r requirements.txt

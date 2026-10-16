@@ -22,11 +22,11 @@ COLUMNS = ["lead_id", "created_at", "channel", "brand", "model",
            "contacted", "visited", "test_drive", "sold"]
 STATE_FILE = Path(__file__).resolve().parent / ".last_hash"
 
-CHANNELS = ["Instagram", "Facebook", "Classifieds", "Call center", "Google Ads", "Website form", "Walk-in", "Referral"]
+CHANNELS = ["Instagram", "Facebook", "Turbo.az", "Call center", "Google Ads", "Website form", "Walk-in", "Referral"]
 CHANNEL_P = [0.26, 0.19, 0.13, 0.15, 0.12, 0.09, 0.035, 0.025]
 VISIT_P = [0.18, 0.17, 0.25, 0.45, 0.32, 0.33, 1.00, 0.57]
-MODELS = {"Brand A": ["A1 Sedan", "A3 SUV", "A5 EV"], "Brand B": ["B2 Hatch", "B4 SUV", "B6 EV"],
-          "Brand C": ["C3 SUV", "C7 Pickup"]}
+MODELS = {"Toyota": ["Corolla", "RAV4", "bZ4X"], "Hyundai": ["i20", "Tucson", "Ioniq 5"],
+          "Mitsubishi": ["Outlander", "L200"]}  # real model names, synthetic numbers
 
 
 def synthetic_rows(n: int, seed: int) -> list[list]:
