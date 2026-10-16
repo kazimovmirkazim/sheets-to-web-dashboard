@@ -3,132 +3,308 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sales Funnel Dashboard</title>
+<title>Sales & Marketing Dashboard</title>
 <style>
   :root {
-    --surface: #fcfcfb; --page: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
-    --grid: #e1e0d9; --border: rgba(11,11,11,0.10); --blue: #2a78d6; --orange: #eb6834; --neutral: #c3c2b7;
+    color-scheme: light;
+    --page: #f4f5f2; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e6e5df; --border: rgba(11,11,11,0.09); --track: #ecebe5;
+    --leads: #2a78d6; --sales: #eb6834; --leads-soft: rgba(42,120,214,0.12);
+    --good: #0e8a4f; --bad: #c2410c;
+    --shadow: 0 1px 2px rgba(11,11,11,.04), 0 4px 16px rgba(11,11,11,.04);
   }
   @media (prefers-color-scheme: dark) {
-    :root { --surface: #1a1a19; --page: #0d0d0d; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
-            --grid: #2c2c2a; --border: rgba(255,255,255,0.10); --blue: #3987e5; --orange: #d95926; --neutral: #4a4a46; }
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+      --grid: #2c2c2a; --border: rgba(255,255,255,0.09); --track: #262624;
+      --leads: #3987e5; --sales: #d95926; --leads-soft: rgba(57,135,229,0.16);
+      --good: #34c47c; --bad: #f08a5d; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --border: rgba(255,255,255,0.09); --track: #262624;
+    --leads: #3987e5; --sales: #d95926; --leads-soft: rgba(57,135,229,0.16);
+    --good: #34c47c; --bad: #f08a5d; --shadow: none;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--page); color: var(--ink);
-         font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
-  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
-           padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
-  h1 { font-size: 18px; margin: 0; }
-  .note { color: var(--muted); font-size: 12px; }
-  select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
-           background: var(--surface); color: var(--ink); }
-  main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
-         grid-template-columns: repeat(12, minmax(0, 1fr)); }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .kpi { grid-column: span 3; }
-  .kpi .label { color: var(--ink-2); font-size: 13px; }
-  .kpi .value { font-size: 30px; font-weight: 600; margin-top: 4px; }
-  .half { grid-column: span 6; }
-  .full { grid-column: span 12; }
-  h2 { font-size: 14px; margin: 0 0 12px; color: var(--ink-2); }
-  .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 70px; gap: 10px; align-items: center; margin: 8px 0; }
-  .row .name { color: var(--ink-2); font-size: 13px; }
-  .track { height: 18px; }
-  .bar { height: 100%; border-radius: 0 4px 4px 0; background: var(--blue); min-width: 2px; }
-  .bar.sales { background: var(--orange); height: 8px; margin-top: 2px; }
-  .row .num { font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
-  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
-  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
-  svg text { fill: var(--muted); font-size: 11px; }
-  @media (max-width: 760px) {
-    .kpi { grid-column: span 6; } .half { grid-column: span 12; }
-    .row { grid-template-columns: 96px minmax(0, 1fr) 52px; }
-    main { padding: 16px; gap: 12px; } header { padding: 12px 16px; }
-    .kpi .value { font-size: 24px; }
+         font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Inter, sans-serif; }
+  .wrap { max-width: 1320px; margin: 0 auto; padding: 20px 24px 32px; }
+
+  header { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
+  h1 { margin: 0; font-size: 22px; letter-spacing: -.01em; }
+  .sub { color: var(--ink-2); font-size: 13px; margin-top: 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px;
+          background: var(--surface); border: 1px solid var(--border); font-size: 12px; color: var(--ink-2); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); }
+  .seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+  .seg button { border: 0; background: none; color: var(--ink-2); font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 7px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+  .grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); min-width: 0; }
+  .kpi { grid-column: span 3; display: flex; flex-direction: column; gap: 2px; }
+  .kpi .label { color: var(--ink-2); font-size: 12.5px; }
+  .kpi .value { font-size: 30px; font-weight: 650; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .kpi .note { font-size: 12.5px; color: var(--muted); }
+  .kpi .note b { color: var(--ink-2); font-weight: 600; }
+  .kpi svg { margin-top: 6px; width: 100%; height: 34px; display: block; }
+  .funnel-card { grid-column: span 5; }
+  .channel-card { grid-column: span 7; }
+  .trend-card { grid-column: span 12; }
+  h2 { margin: 0; font-size: 15px; }
+  .finding { margin: 4px 0 14px; color: var(--ink-2); font-size: 13px; }
+  .finding b { color: var(--ink); }
+
+  /* funnel */
+  .f-row { display: grid; grid-template-columns: 112px 1fr 64px; align-items: center; gap: 10px; height: 34px; }
+  .f-name { font-size: 13px; color: var(--ink-2); }
+  .f-track { position: relative; height: 22px; }
+  .f-bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: var(--leads); }
+  .f-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .f-step { display: grid; grid-template-columns: 112px 1fr; gap: 10px; height: 18px; font-size: 11.5px; color: var(--muted); }
+  .f-step span:last-child::before { content: "↓ "; }
+  .f-step.worst span:last-child { color: var(--bad); font-weight: 600; }
+
+  /* channels */
+  .ch-head, .ch-row { display: grid; grid-template-columns: 116px 1fr 1fr; gap: 16px; align-items: center; }
+  .ch-head { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding-bottom: 6px; border-bottom: 1px solid var(--grid); }
+  .ch-row { height: 31px; border-bottom: 1px solid var(--grid); }
+  .ch-row:last-child { border-bottom: 0; }
+  .ch-name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .cell { display: grid; grid-template-columns: 1fr 58px; gap: 8px; align-items: center; }
+  .bar-track { height: 12px; position: relative; }
+  .bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--ink-2); }
+  .ch-row.best .ch-name, .ch-row.best .conv { color: var(--ink); font-weight: 650; }
+
+  /* trend */
+  .trend { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .trend h3 { margin: 0 0 2px; font-size: 13px; color: var(--ink-2); font-weight: 500; display: flex; gap: 8px; align-items: center; }
+  .sw { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+  .trend svg { width: 100%; height: 190px; display: block; overflow: visible; }
+  .axis text { fill: var(--muted); font-size: 11px; }
+  .gridline { stroke: var(--grid); stroke-width: 1; }
+
+  #tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--surface);
+         padding: 7px 10px; border-radius: 8px; font-size: 12px; line-height: 1.35; opacity: 0; transition: opacity .1s;
+         font-variant-numeric: tabular-nums; max-width: 240px; }
+  footer { margin-top: 16px; color: var(--muted); font-size: 12px; }
+  .table-toggle { margin-top: 10px; font-size: 12px; }
+  details summary { cursor: pointer; color: var(--ink-2); }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  td, th { padding: 4px 6px; border-bottom: 1px solid var(--grid); text-align: right; }
+  td:first-child, th:first-child { text-align: left; }
+
+  @media (max-width: 1100px) {
+    .kpi { grid-column: span 6; }
+    .funnel-card, .channel-card { grid-column: span 12; }
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 14px 12px 24px; }
+    .kpi { grid-column: span 6; padding: 12px; }
+    .kpi .value { font-size: 23px; }
+    .trend { grid-template-columns: 1fr; }
+    .ch-head, .ch-row { grid-template-columns: 92px 1fr 1fr; gap: 8px; }
+    .cell { grid-template-columns: 1fr 44px; gap: 4px; }
+    .f-row { grid-template-columns: 96px 1fr 54px; }
+    .f-step { grid-template-columns: 96px 1fr; }
   }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <h1>Sales Funnel Dashboard</h1>
-    <div class="note">Demo with synthetic data · <span id="sync">loading…</span></div>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Sales & Marketing Dashboard</h1>
+      <div class="sub"><span class="pill"><i class="dot"></i><span id="sync">loading…</span></span><span>Demo with synthetic data · refreshed from Google Sheets every 15 min</span></div>
+    </div>
+    <div class="seg" id="brands" role="group" aria-label="Brand filter"></div>
+  </header>
+
+  <div class="grid">
+    <div class="card kpi"><div class="label">Leads</div><div class="value" id="k-leads">–</div><div class="note" id="n-leads"></div><svg id="s-leads" preserveAspectRatio="none"></svg></div>
+    <div class="card kpi"><div class="label">Showroom visits</div><div class="value" id="k-visits">–</div><div class="note" id="n-visits"></div><svg id="s-visits" preserveAspectRatio="none"></svg></div>
+    <div class="card kpi"><div class="label">Sales</div><div class="value" id="k-sales">–</div><div class="note" id="n-sales"></div><svg id="s-sales" preserveAspectRatio="none"></svg></div>
+    <div class="card kpi"><div class="label">Lead-to-sale conversion</div><div class="value" id="k-conv">–</div><div class="note" id="n-conv"></div><svg id="s-conv" preserveAspectRatio="none"></svg></div>
+
+    <section class="card funnel-card">
+      <h2>Funnel</h2>
+      <p class="finding" id="f-finding"></p>
+      <div id="funnel"></div>
+    </section>
+
+    <section class="card channel-card">
+      <h2>Channels: volume vs quality</h2>
+      <p class="finding" id="c-finding"></p>
+      <div class="ch-head"><span>Channel</span><span>Leads</span><span>Lead-to-sale</span></div>
+      <div id="channels"></div>
+    </section>
+
+    <section class="card trend-card">
+      <h2>Monthly trend</h2>
+      <p class="finding" id="t-finding"></p>
+      <div class="trend">
+        <div><h3><i class="sw" style="background:var(--leads)"></i>Leads per month</h3><svg id="t-leads"></svg></div>
+        <div><h3><i class="sw" style="background:var(--sales)"></i>Sales per month</h3><svg id="t-sales"></svg></div>
+      </div>
+      <details class="table-toggle"><summary>Show as table</summary><div id="table"></div></details>
+    </section>
   </div>
-  <label>Brand <select id="brand"><option>All</option></select></label>
-</header>
-<main>
-  <div class="card kpi"><div class="label">Leads</div><div class="value" id="k-leads">–</div></div>
-  <div class="card kpi"><div class="label">Showroom visits</div><div class="value" id="k-visits">–</div></div>
-  <div class="card kpi"><div class="label">Sales</div><div class="value" id="k-sales">–</div></div>
-  <div class="card kpi"><div class="label">Lead-to-sale</div><div class="value" id="k-conv">–</div></div>
+  <footer>Sheet → Apps Script (hash check, gzip chunks) → server → SQLite → this page. No framework: HTML, CSS and SVG.</footer>
+</div>
+<div id="tip" role="tooltip"></div>
 
-  <section class="card half"><h2>Funnel: share of leads at each step</h2><div id="funnel"></div></section>
-  <section class="card half">
-    <h2>Channels: leads and sales</h2>
-    <div class="legend"><span><i style="background:var(--blue)"></i>Leads</span><span><i style="background:var(--orange)"></i>Sales</span><span>right: lead-to-sale %</span></div>
-    <div id="channels"></div>
-  </section>
-  <section class="card full"><h2>Sales by month</h2><div id="monthly"></div></section>
-</main>
 <script>
-const fmt = n => n.toLocaleString("en-US");
+const fmt = n => Math.round(n).toLocaleString("en-US");
+const pct = (a, b, d = 1) => b ? (100 * a / b).toFixed(d) + "%" : "–";
 const $ = id => document.getElementById(id);
+const NS = "http://www.w3.org/2000/svg";
+const tip = $("tip");
+let brand = "All", brandsDrawn = false, data = null;
 
-async function load(brand) {
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.opacity = 1;
+  const x = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8);
+  const y = Math.max(8, e.clientY - tip.offsetHeight - 12);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => tip.style.opacity = 0;
+const monthName = m => new Date(m + "-01T00:00:00").toLocaleString("en-US", { month: "short", year: "2-digit" });
+
+async function load() {
   const res = await fetch(`/api/summary?brand=${encodeURIComponent(brand)}`);
-  const d = await res.json();
-  if (d.empty) { $("sync").textContent = "no data yet: run the sync"; return; }
+  data = await res.json();
+  if (data.empty) { $("sync").textContent = "no data yet: run the sync"; return; }
+  render();
+}
 
-  const sel = $("brand");
-  if (sel.options.length === 1) d.brands.forEach(b => sel.add(new Option(b)));
-  $("sync").textContent = `last sync ${new Date(d.last_sync.at).toLocaleString()} · ${fmt(d.last_sync.rows)} rows`;
+function drawBrands() {
+  const box = $("brands");
+  box.innerHTML = "";
+  ["All", ...data.brands].forEach(b => {
+    const btn = document.createElement("button");
+    btn.textContent = b; btn.setAttribute("aria-pressed", b === brand);
+    btn.onclick = () => { brand = b; [...box.children].forEach(c => c.setAttribute("aria-pressed", c === btn)); load(); };
+    box.appendChild(btn);
+  });
+  brandsDrawn = true;
+}
 
-  const [leads, , visits, , sales] = d.funnel.map(f => f[1]);
+function spark(svg, values, color, fill) {
+  const w = 300, h = 34, max = Math.max(...values), min = Math.min(...values);
+  const x = i => i / (values.length - 1) * w, y = v => h - 3 - (v - min) / (max - min || 1) * (h - 6);
+  const d = values.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join("");
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.innerHTML = (fill ? `<path d="${d}L${w},${h}L0,${h}Z" fill="${fill}"/>` : "") +
+    `<path d="${d}" fill="none" stroke="${color}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
+}
+
+function render() {
+  if (!brandsDrawn) drawBrands();
+  const d = data;
+  $("sync").textContent = `Last sync ${new Date(d.last_sync.at).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })} · ${fmt(d.last_sync.rows)} rows`;
+
+  const [leads, contacted, visits, tdrive, sales] = d.funnel.map(f => f[1]);
+  const m = d.monthly, last = m.at(-1), prev = m.at(-13);
+  const yoy = (a, b) => b ? ((a / b - 1) * 100) : 0;
+  const trend = v => `<b style="color:${v >= 0 ? "var(--good)" : "var(--bad)"}">${v >= 0 ? "▲" : "▼"} ${Math.abs(v).toFixed(1)}%</b>`;
+
   $("k-leads").textContent = fmt(leads);
+  $("n-leads").innerHTML = prev ? `${monthName(last.month)} vs year before ${trend(yoy(last.leads, prev.leads))}` : "";
   $("k-visits").textContent = fmt(visits);
+  $("n-visits").innerHTML = `<b>${pct(visits, leads)}</b> of leads visit a showroom`;
   $("k-sales").textContent = fmt(sales);
-  $("k-conv").textContent = (100 * sales / leads).toFixed(1) + "%";
+  $("n-sales").innerHTML = prev ? `${monthName(last.month)} vs year before ${trend(yoy(last.sales, prev.sales))}` : "";
+  $("k-conv").textContent = pct(sales, leads, 2);
+  $("n-conv").innerHTML = `<b>${pct(sales, visits)}</b> of showroom visits end in a sale`;
+  spark($("s-leads"), m.map(r => r.leads), "var(--leads)", "var(--leads-soft)");
+  const share = visits / leads, sv = $("s-visits");
+  sv.setAttribute("viewBox", "0 0 300 34");
+  sv.innerHTML = `<rect x="0" y="13" width="300" height="8" rx="4" fill="var(--track)"/><rect x="0" y="13" width="${(share * 300).toFixed(1)}" height="8" rx="4" fill="var(--leads)"/>`;
+  spark($("s-sales"), m.map(r => r.sales), "var(--sales)");
+  spark($("s-conv"), m.map(r => r.sales / r.leads), "var(--ink-2)");
 
-  $("funnel").innerHTML = d.funnel.map(([name, n]) => `
-    <div class="row" title="${name}: ${fmt(n)}">
-      <span class="name">${name}</span>
-      <div class="track"><div class="bar" style="width:${100 * n / leads}%"></div></div>
-      <span class="num">${(100 * n / leads).toFixed(1)}%</span>
+  // Funnel: share of leads at each step + where the biggest drop is
+  const steps = d.funnel.slice(1).map(([name, n], i) => ({ from: d.funnel[i][0], to: name, rate: n / d.funnel[i][1] }));
+  const worst = steps.reduce((a, b) => b.rate < a.rate ? b : a);
+  $("f-finding").innerHTML = `Biggest drop: <b>${worst.from} → ${worst.to}</b>, only ${pct(worst.rate, 1, 0)} continue.`;
+  $("funnel").innerHTML = d.funnel.map(([name, n], i) => {
+    const step = i ? steps[i - 1] : null;
+    const opacity = 1 - i * 0.14;
+    return (step ? `<div class="f-step ${step === worst ? "worst" : ""}"><span></span><span>${pct(step.rate, 1, 0)} continue</span></div>` : "") +
+      `<div class="f-row" data-tip="${name}: ${fmt(n)} · ${pct(n, leads)} of leads">
+         <span class="f-name">${name}</span>
+         <div class="f-track"><div class="f-bar" style="width:${Math.max(n / leads * 100, 0.8)}%;opacity:${opacity}"></div></div>
+         <span class="f-val">${pct(n, leads, n / leads < 0.1 ? 1 : 0)}</span>
+       </div>`;
+  }).join("");
+
+  // Channels: two scales, two columns (no dual axis)
+  const ch = [...d.channels].sort((a, b) => b.leads - a.leads);
+  const maxLeads = Math.max(...ch.map(c => c.leads));
+  const conv = c => c.sales / c.leads;
+  const maxConv = Math.max(...ch.map(conv));
+  const best = ch.reduce((a, b) => conv(b) > conv(a) ? b : a);
+  const biggest = ch[0];
+  $("c-finding").innerHTML = `<b>${biggest.channel}</b> brings the most leads (${pct(biggest.leads, leads, 0)}) but converts at ${pct(biggest.sales, biggest.leads)}; <b>${best.channel}</b> converts best at ${pct(best.sales, best.leads)}.`;
+  $("channels").innerHTML = ch.map(c => `
+    <div class="ch-row ${c === best ? "best" : ""}" data-tip="${c.channel}: ${fmt(c.leads)} leads · ${fmt(c.sales)} sales · ${pct(c.sales, c.leads)} lead-to-sale">
+      <span class="ch-name">${c.channel}</span>
+      <div class="cell"><div class="bar-track"><div class="bar" style="width:${c.leads / maxLeads * 100}%;background:var(--leads)"></div></div><span class="num">${fmt(c.leads)}</span></div>
+      <div class="cell"><div class="bar-track"><div class="bar" style="width:${conv(c) / maxConv * 100}%;background:var(--sales)"></div></div><span class="num conv">${pct(c.sales, c.leads)}</span></div>
     </div>`).join("");
 
-  const maxLeads = Math.max(...d.channels.map(c => c.leads));
-  $("channels").innerHTML = d.channels.map(c => `
-    <div class="row" title="${c.channel}: ${fmt(c.leads)} leads, ${fmt(c.sales)} sales">
-      <span class="name">${c.channel}</span>
-      <div><div class="bar" style="height:10px;width:${100 * c.leads / maxLeads}%"></div>
-           <div class="bar sales" style="width:${100 * c.sales / maxLeads}%"></div></div>
-      <span class="num">${(100 * c.sales / c.leads).toFixed(1)}%</span>
-    </div>`).join("");
+  // Monthly trend: two small multiples instead of one chart with two y-axes
+  const peak = m.reduce((a, b) => b.sales > a.sales ? b : a);
+  $("t-finding").innerHTML = `Demand is seasonal: spring and autumn peaks. Best month for sales: <b>${monthName(peak.month)}</b> (${fmt(peak.sales)}).`;
+  line($("t-leads"), m, "leads", "var(--leads)", "leads");
+  line($("t-sales"), m, "sales", "var(--sales)", "sales");
 
-  drawLine($("monthly"), d.monthly);
+  $("table").innerHTML = `<table><tr><th>Month</th><th>Leads</th><th>Sales</th><th>Lead-to-sale</th></tr>${
+    m.map(r => `<tr><td>${monthName(r.month)}</td><td>${fmt(r.leads)}</td><td>${fmt(r.sales)}</td><td>${pct(r.sales, r.leads, 2)}</td></tr>`).join("")}</table>`;
+
+  document.querySelectorAll("[data-tip]").forEach(el => {
+    el.onmousemove = e => showTip(e, el.dataset.tip); el.onmouseleave = hideTip;
+  });
 }
 
-function drawLine(el, data) {
-  const W = 1100, H = 240, pad = { l: 40, r: 10, t: 10, b: 24 };
-  const step = 10 ** Math.floor(Math.log10(Math.max(...data.map(d => d.sales))));
-  const max = Math.ceil(Math.max(...data.map(d => d.sales)) * 1.1 / step) * step;
-  const x = i => pad.l + i * (W - pad.l - pad.r) / (data.length - 1);
-  const y = v => H - pad.b - v / max * (H - pad.t - pad.b);
-  const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => Math.round(t * max));
-  const path = data.map((d, i) => `${i ? "L" : "M"}${x(i)},${y(d.sales)}`).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Sales by month">
-    ${ticks.map(t => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>
-      <text x="${pad.l - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`).join("")}
-    <path d="${path}" fill="none" stroke="var(--blue)" stroke-width="2"/>
-    ${data.map((d, i) => `<circle cx="${x(i)}" cy="${y(d.sales)}" r="4" fill="var(--blue)" stroke="var(--surface)" stroke-width="2">
-      <title>${d.month}: ${fmt(d.sales)} sales</title></circle>
-      ${i % 3 === 0 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${d.month}</text>` : ""}`).join("")}
-  </svg>`;
+function line(svg, rows, key, color, unit) {
+  const W = Math.max(300, Math.round(svg.getBoundingClientRect().width) || 600), H = 190, L = 44, R = 10, T = 10, B = 24;
+  const vals = rows.map(r => r[key]);
+  const raw = Math.max(...vals) / 3, mag = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 2.5, 5, 10].map(f => f * mag).find(v => v >= raw);
+  const max = step * Math.ceil(Math.max(...vals) * 1.05 / step);
+  const ticks = Array.from({ length: Math.round(max / step) + 1 }, (_, i) => i * step);
+  const x = i => L + i / (rows.length - 1) * (W - L - R);
+  const y = v => T + (1 - v / max) * (H - T - B);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const path = rows.map((r, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(r[key]).toFixed(1)}`).join("");
+  let s = `<g class="axis">${ticks.map(t => `<line class="gridline" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end">${t >= 1000 ? (t / 1000).toFixed(t % 1000 ? 1 : 0) + "k" : t}</text>`).join("")}`;
+  rows.forEach((r, i) => { if (i % (W < 520 ? 6 : 3) === 0) s += `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${monthName(r.month)}</text>`; });
+  s += `</g><path d="${path}L${x(rows.length - 1)},${y(0)}L${x(0)},${y(0)}Z" fill="${color}" opacity=".08"/>`;
+  s += `<path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<line id="${svg.id}-x" y1="${T}" y2="${H - B}" stroke="var(--muted)" stroke-dasharray="3 3" opacity="0"/>`;
+  s += `<circle id="${svg.id}-p" r="4.5" fill="${color}" stroke="var(--surface)" stroke-width="2" opacity="0"/>`;
+  s += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${H - T - B}" fill="transparent"/>`;
+  svg.innerHTML = s;
+  const hit = svg.lastElementChild, cross = svg.querySelector(`#${svg.id}-x`), pt = svg.querySelector(`#${svg.id}-p`);
+  hit.onmousemove = e => {
+    const box = svg.getBoundingClientRect();
+    const i = Math.max(0, Math.min(rows.length - 1, Math.round(((e.clientX - box.left) / box.width * W - L) / (W - L - R) * (rows.length - 1))));
+    const r = rows[i];
+    cross.setAttribute("x1", x(i)); cross.setAttribute("x2", x(i)); cross.setAttribute("opacity", 1);
+    pt.setAttribute("cx", x(i)); pt.setAttribute("cy", y(r[key])); pt.setAttribute("opacity", 1);
+    showTip(e, `<b>${monthName(r.month)}</b><br>${fmt(r[key])} ${unit}<br>${pct(r.sales, r.leads, 2)} lead-to-sale`);
+  };
+  hit.onmouseleave = () => { cross.setAttribute("opacity", 0); pt.setAttribute("opacity", 0); hideTip(); };
 }
 
-$("brand").addEventListener("change", e => load(e.target.value));
-load("All");
-setInterval(() => load($("brand").value), 60_000);
+load();
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => data && !data.empty && render(), 150); });
 </script>
 </body>
 </html>
