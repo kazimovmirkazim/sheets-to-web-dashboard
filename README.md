@@ -1,5 +1,3 @@
-![cover](images/cover.png)
-
 # Sheets to Web Dashboard
 
 A small, working template for a common situation: **the team keeps its data in Google Sheets and does not want to change that, but the reports are slow, manual or break above a few hundred thousand rows.**
