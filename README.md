@@ -8,18 +8,28 @@ I built a production version of this for a car dealer group's marketing and sale
 
 ![Dashboard](images/dashboard_desktop.png)
 
+## What the dashboard answers
+
+Every card leads with its finding, computed from the data, not typed in:
+
+| Card | Question | On the demo data |
+|---|---|---|
+| KPIs | How many leads, visits and sales, and how does the last month compare with a year before? | 210,000 leads → 13,383 sales (6.37%) |
+| Funnel | Where do we lose customers? The weakest step is highlighted. | Contacted → showroom visit: only 30% continue |
+| Channels | Which channel brings volume and which brings buyers? Leads and conversion sit in two columns with their own scales, never on one dual axis. | Instagram: most leads, 3.9% conversion · Walk-in: 22.0% |
+| Monthly trend | Is it seasonal? Leads and sales as two small multiples with a hover crosshair and a table view. | Spring and autumn peaks |
+
+Brand filter, hover tooltips, a table view for accessibility, responsive layout and dark mode. Plain HTML, CSS and SVG, no framework and no chart library.
+
+<p align="center">
+  <img src="images/dashboard_mobile.png" width="260" alt="Mobile view">
+  &nbsp;&nbsp;
+  <img src="images/dashboard_dark.png" width="560" alt="Dark mode">
+</p>
+
 ## How it works
 
-```mermaid
-flowchart LR
-    A[Google Sheet<br/>team enters data] --> B[Apps Script<br/>every 15 min]
-    B -->|hash unchanged| S[skip upload]
-    B -->|hash changed| C[gzip chunks<br/>20K rows each]
-    C --> D[Server<br/>token check]
-    D --> E[(SQLite<br/>new table)]
-    E -->|all parts received| F[atomic swap]
-    F --> G[Web dashboard<br/>desktop + mobile]
-```
+![Architecture](images/architecture.png)
 
 | Problem | Decision |
 |---|---|
@@ -28,8 +38,6 @@ flowchart LR
 | A half-finished upload would show half the data | Parts go into a new table; the live table is replaced in one transaction only after the last part |
 | No service account keys allowed | The script runs as the sheet owner and pushes the data itself; the server only checks a shared token |
 | People open it on their phones | Plain HTML/CSS/SVG, no framework, responsive layout |
-
-<p align="center"><img src="images/dashboard_mobile.png" width="300" alt="Mobile view"></p>
 
 ## Run it locally (no Google account needed)
 
@@ -60,8 +68,9 @@ python tools/simulate_sync.py --seed 2        # new data -> uploads again
 ```
 apps_script/Code.gs      sheet -> server sync (hash check, gzip, chunks, trigger)
 server/app.py            upload endpoint, atomic table swap, /api/summary, static files (stdlib only)
-web/index.html           dashboard: KPIs, funnel, channels, monthly sales, brand filter
+web/index.html           dashboard: KPIs, funnel, channels, monthly trend, brand filter, dark mode
 tools/simulate_sync.py   local stand-in for the Apps Script, with synthetic data
+images/                  screenshots and the architecture diagram
 ```
 
 ## What the production version adds
