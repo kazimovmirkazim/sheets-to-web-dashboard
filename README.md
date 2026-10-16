@@ -1,3 +1,5 @@
+![cover](images/cover.png)
+
 # Sheets to Web Dashboard
 
 A small, working template for a common situation: **the team keeps its data in Google Sheets and does not want to change that, but the reports are slow, manual or break above a few hundred thousand rows.**
@@ -24,7 +26,7 @@ flowchart LR
 | Problem | Decision |
 |---|---|
 | Re-sending unchanged data every 15 minutes wastes quota and time | SHA-256 of the sheet data; if it matches the last sync, nothing is sent |
-| Request body limits on the server side | Rows are split into 20K-row chunks and gzip-compressed (210K rows: 15.8 MB → 1.5 MB) |
+| Request body limits on the server side | Rows are split into 20K-row chunks and gzip-compressed (210K rows: 15.6 MB → 1.5 MB) |
 | A half-finished upload would show half the data | Parts go into a new table; the live table is replaced in one transaction only after the last part |
 | No service account keys allowed | The script runs as the sheet owner and pushes the data itself; the server only checks a shared token |
 | People open it on their phones | Plain HTML/CSS/SVG, no framework, responsive layout |
