@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sales Funnel Dashboard</title>
+<style>
+  :root {
+    --surface: #fcfcfb; --page: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+    --grid: #e1e0d9; --border: rgba(11,11,11,0.10); --blue: #2a78d6; --orange: #eb6834; --neutral: #c3c2b7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --surface: #1a1a19; --page: #0d0d0d; --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+            --grid: #2c2c2a; --border: rgba(255,255,255,0.10); --blue: #3987e5; --orange: #d95926; --neutral: #4a4a46; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+           padding: 16px 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  h1 { font-size: 18px; margin: 0; }
+  .note { color: var(--muted); font-size: 12px; }
+  select { font: inherit; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+           background: var(--surface); color: var(--ink); }
+  main { max-width: 1200px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
+         grid-template-columns: repeat(12, minmax(0, 1fr)); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .kpi { grid-column: span 3; }
+  .kpi .label { color: var(--ink-2); font-size: 13px; }
+  .kpi .value { font-size: 30px; font-weight: 600; margin-top: 4px; }
+  .half { grid-column: span 6; }
+  .full { grid-column: span 12; }
+  h2 { font-size: 14px; margin: 0 0 12px; color: var(--ink-2); }
+  .row { display: grid; grid-template-columns: 120px minmax(0, 1fr) 70px; gap: 10px; align-items: center; margin: 8px 0; }
+  .row .name { color: var(--ink-2); font-size: 13px; }
+  .track { height: 18px; }
+  .bar { height: 100%; border-radius: 0 4px 4px 0; background: var(--blue); min-width: 2px; }
+  .bar.sales { background: var(--orange); height: 8px; margin-top: 2px; }
+  .row .num { font-variant-numeric: tabular-nums; font-size: 13px; text-align: right; }
+  .legend { display: flex; gap: 16px; font-size: 12px; color: var(--ink-2); margin-bottom: 4px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+  svg text { fill: var(--muted); font-size: 11px; }
+  @media (max-width: 760px) {
+    .kpi { grid-column: span 6; } .half { grid-column: span 12; }
+    .row { grid-template-columns: 96px minmax(0, 1fr) 52px; }
+    main { padding: 16px; gap: 12px; } header { padding: 12px 16px; }
+    .kpi .value { font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Sales Funnel Dashboard</h1>
+    <div class="note">Demo with synthetic data · <span id="sync">loading…</span></div>
+  </div>
+  <label>Brand <select id="brand"><option>All</option></select></label>
+</header>
+<main>
+  <div class="card kpi"><div class="label">Leads</div><div class="value" id="k-leads">–</div></div>
+  <div class="card kpi"><div class="label">Showroom visits</div><div class="value" id="k-visits">–</div></div>
+  <div class="card kpi"><div class="label">Sales</div><div class="value" id="k-sales">–</div></div>
+  <div class="card kpi"><div class="label">Lead-to-sale</div><div class="value" id="k-conv">–</div></div>
+
+  <section class="card half"><h2>Funnel: share of leads at each step</h2><div id="funnel"></div></section>
+  <section class="card half">
+    <h2>Channels: leads and sales</h2>
+    <div class="legend"><span><i style="background:var(--blue)"></i>Leads</span><span><i style="background:var(--orange)"></i>Sales</span><span>right: lead-to-sale %</span></div>
+    <div id="channels"></div>
+  </section>
+  <section class="card full"><h2>Sales by month</h2><div id="monthly"></div></section>
+</main>
+<script>
+const fmt = n => n.toLocaleString("en-US");
+const $ = id => document.getElementById(id);
+
+async function load(brand) {
+  const res = await fetch(`/api/summary?brand=${encodeURIComponent(brand)}`);
+  const d = await res.json();
+  if (d.empty) { $("sync").textContent = "no data yet: run the sync"; return; }
+
+  const sel = $("brand");
+  if (sel.options.length === 1) d.brands.forEach(b => sel.add(new Option(b)));
+  $("sync").textContent = `last sync ${new Date(d.last_sync.at).toLocaleString()} · ${fmt(d.last_sync.rows)} rows`;
+
+  const [leads, , visits, , sales] = d.funnel.map(f => f[1]);
+  $("k-leads").textContent = fmt(leads);
+  $("k-visits").textContent = fmt(visits);
+  $("k-sales").textContent = fmt(sales);
+  $("k-conv").textContent = (100 * sales / leads).toFixed(1) + "%";
+
+  $("funnel").innerHTML = d.funnel.map(([name, n]) => `
+    <div class="row" title="${name}: ${fmt(n)}">
+      <span class="name">${name}</span>
+      <div class="track"><div class="bar" style="width:${100 * n / leads}%"></div></div>
+      <span class="num">${(100 * n / leads).toFixed(1)}%</span>
+    </div>`).join("");
+
+  const maxLeads = Math.max(...d.channels.map(c => c.leads));
+  $("channels").innerHTML = d.channels.map(c => `
+    <div class="row" title="${c.channel}: ${fmt(c.leads)} leads, ${fmt(c.sales)} sales">
+      <span class="name">${c.channel}</span>
+      <div><div class="bar" style="height:10px;width:${100 * c.leads / maxLeads}%"></div>
+           <div class="bar sales" style="width:${100 * c.sales / maxLeads}%"></div></div>
+      <span class="num">${(100 * c.sales / c.leads).toFixed(1)}%</span>
+    </div>`).join("");
+
+  drawLine($("monthly"), d.monthly);
+}
+
+function drawLine(el, data) {
+  const W = 1100, H = 240, pad = { l: 40, r: 10, t: 10, b: 24 };
+  const step = 10 ** Math.floor(Math.log10(Math.max(...data.map(d => d.sales))));
+  const max = Math.ceil(Math.max(...data.map(d => d.sales)) * 1.1 / step) * step;
+  const x = i => pad.l + i * (W - pad.l - pad.r) / (data.length - 1);
+  const y = v => H - pad.b - v / max * (H - pad.t - pad.b);
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map(t => Math.round(t * max));
+  const path = data.map((d, i) => `${i ? "L" : "M"}${x(i)},${y(d.sales)}`).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Sales by month">
+    ${ticks.map(t => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--grid)"/>
+      <text x="${pad.l - 6}" y="${y(t) + 4}" text-anchor="end">${fmt(t)}</text>`).join("")}
+    <path d="${path}" fill="none" stroke="var(--blue)" stroke-width="2"/>
+    ${data.map((d, i) => `<circle cx="${x(i)}" cy="${y(d.sales)}" r="4" fill="var(--blue)" stroke="var(--surface)" stroke-width="2">
+      <title>${d.month}: ${fmt(d.sales)} sales</title></circle>
+      ${i % 3 === 0 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="middle">${d.month}</text>` : ""}`).join("")}
+  </svg>`;
+}
+
+$("brand").addEventListener("change", e => load(e.target.value));
+load("All");
+setInterval(() => load($("brand").value), 60_000);
+</script>
+</body>
+</html>
